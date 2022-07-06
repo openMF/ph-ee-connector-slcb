@@ -18,4 +18,7 @@ public class CamelProperties {
     public static final String ZEEBE_JOB_KEY = "jobKey";
 
     public static final String ZEEBE_VARIABLES = "zeebeVariables";
+    public static final String SOURCE_ACCOUNT = "sourceAccount";
+    public static final String TOTAL_AMOUNT = "amountToBePaid";
+    public static final String BATCH_ID = "batchId";
 }

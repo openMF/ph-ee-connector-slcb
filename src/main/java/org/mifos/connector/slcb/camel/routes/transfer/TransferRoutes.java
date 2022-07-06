@@ -70,8 +70,8 @@ public class TransferRoutes extends BaseSLCBRouteBuilder {
                     exchange.setProperty(TRANSACTION_ID, exchange.getProperty(CORRELATION_ID)); // TODO: Improve this
                 })
                 .setProperty(TRANSACTION_FAILED, constant(true))
-                .process(transferResponseProcessor)
-                .endChoice();
+                .endChoice()
+                .process(transferResponseProcessor);
 
         /*
          * Calls SLCB API to commit transaction
@@ -79,10 +79,8 @@ public class TransferRoutes extends BaseSLCBRouteBuilder {
         getBaseAuthDefinitionBuilder("direct:commit-transaction", HttpRequestMethod.POST)
                 .process(exchange -> {
                     String signedBody = SecurityUtils.signContent(UUID.randomUUID().toString(), slcbConfig.signatureKey);
-                    String prop = exchange.getProperty(SLCB_CHANNEL_REQUEST, String.class);
-                    logger.info("Properties: " + prop);
-                    PaymentRequestDTO slcbChannelRequestBody = objectMapper.readValue(
-                            prop, PaymentRequestDTO.class);
+                    PaymentRequestDTO slcbChannelRequestBody = exchange.getProperty(SLCB_CHANNEL_REQUEST,
+                            PaymentRequestDTO.class);
                     slcbChannelRequestBody.setAuthorizationCode(signedBody);
                     exchange.setProperty(SLCB_CHANNEL_REQUEST, slcbChannelRequestBody);
                 })
