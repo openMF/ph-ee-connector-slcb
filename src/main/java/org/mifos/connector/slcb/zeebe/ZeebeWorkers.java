@@ -6,6 +6,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.support.DefaultExchange;
+import org.mifos.connector.slcb.dto.PaymentRequestDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,12 +45,19 @@ public class ZeebeWorkers {
         zeebeClient.newWorker()
                 .jobType(Worker.SLCB_TRANSFER.toString())
                 .handler((client, job) -> {
-                    logger.info("Job '{}' started from process '{}' with key {}", job.getType(), job.getBpmnProcessId(), job.getKey());
+                    logger.info("Job '{}' started from process '{}' with key {}",
+                            job.getType(), job.getBpmnProcessId(), job.getKey());
                     Map<String, Object> variables = job.getVariablesAsMap();
 
                     Exchange exchange = new DefaultExchange(camelContext);
+
+                    String prop = (String) variables.get(SLCB_CHANNEL_REQUEST);
+                    logger.info("SLCB_CHANNEL_REQUEST: " + prop);
+                    PaymentRequestDTO SLCBChannelRequestBody = objectMapper.readValue(
+                            prop, PaymentRequestDTO.class);
+
+                    exchange.setProperty(SLCB_CHANNEL_REQUEST, SLCBChannelRequestBody);
                     exchange.setProperty(CORRELATION_ID, variables.get("transactionId"));
-                    exchange.setProperty(SLCB_CHANNEL_REQUEST, variables.get(SLCB_CHANNEL_REQUEST));
                     exchange.setProperty(ZEEBE_JOB_KEY, job.getKey());
 
                     producerTemplate.asyncSend("direct:transfer-route", exchange);
@@ -58,6 +66,36 @@ public class ZeebeWorkers {
                 .name(Worker.SLCB_TRANSFER.toString())
                 .maxJobsActive(workerMaxJobs)
                 .open();
+
+        zeebeClient.newWorker()
+                .jobType(Worker.RECONCILIATION.toString())
+                .handler((client, job) -> {
+                    logger.info("Job '{}' started from process '{}' with key {}",
+                            job.getType(), job.getBpmnProcessId(), job.getKey());
+
+                    Map<String, Object> variables = job.getVariablesAsMap();
+
+                    Exchange exchange = new DefaultExchange(camelContext);
+
+                    String prop = (String) variables.get(SLCB_CHANNEL_REQUEST);
+                    logger.info("SLCB_CHANNEL_REQUEST: " + prop);
+                    PaymentRequestDTO SLCBChannelRequestBody = objectMapper.readValue(
+                            prop, PaymentRequestDTO.class);
+
+                    exchange.setProperty(SLCB_CHANNEL_REQUEST, SLCBChannelRequestBody);
+                    exchange.setProperty(CORRELATION_ID, variables.get("transactionId"));
+                    exchange.setProperty(ZEEBE_JOB_KEY, job.getKey());
+                    exchange.setProperty(SOURCE_ACCOUNT, variables.get(ZeebeVariables.SOURCE_ACCOUNT));
+                    exchange.setProperty(TOTAL_AMOUNT, variables.get(ZeebeVariables.TOTAL_AMOUNT));
+                    exchange.setProperty(BATCH_ID, variables.get(ZeebeVariables.BATCH_ID));
+
+                    producerTemplate.asyncSend("direct:reconciliation-route", exchange);
+
+                })
+                .name(Worker.RECONCILIATION.toString())
+                .maxJobsActive(workerMaxJobs)
+                .open();
+
     }
 
     protected enum Worker {

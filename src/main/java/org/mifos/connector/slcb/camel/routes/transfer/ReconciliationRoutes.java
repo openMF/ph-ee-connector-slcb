@@ -12,6 +12,13 @@ import static org.mifos.connector.slcb.camel.config.CamelProperties.*;
 @Component
 public class ReconciliationRoutes extends BaseSLCBRouteBuilder {
 
+    private final
+    ZeebeCompleteCommandPublisher zeebeCompleteCommandPublisher;
+
+    public ReconciliationRoutes(ZeebeCompleteCommandPublisher zeebeCompleteCommandPublisher) {
+        this.zeebeCompleteCommandPublisher = zeebeCompleteCommandPublisher;
+    }
+
     @Override
     public void configure() {
 
@@ -27,7 +34,8 @@ public class ReconciliationRoutes extends BaseSLCBRouteBuilder {
                 .to("direct:initiate-reconciliation")
                 .log(LoggingLevel.INFO, "Status: ${header.CamelHttpResponseCode}")
                 .log(LoggingLevel.INFO, "Fetch Balance API response: ${body}")
-                .to("direct:reconciliation-response-handler");
+                .to("direct:reconciliation-response-handler")
+                .process(zeebeCompleteCommandPublisher);
 
 
         /*
