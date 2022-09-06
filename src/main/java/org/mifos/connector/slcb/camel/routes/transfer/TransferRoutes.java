@@ -112,16 +112,16 @@ public class TransferRoutes extends BaseSLCBRouteBuilder {
                         if (payee.getStatus().getCode() == 0) {
                             completed++;
                             completedAmount += payee.getAmount();
-                            ongoingAmount -= payee.getAmount();
                         } else if (payee.getStatus().getCode() == 1) {
                             ongoing++;
                             ongoingAmount += payee.getAmount();
                         } else {
                             failed++;
                             failedAmount += payee.getAmount();
-                            ongoingAmount -= payee.getAmount();
                         }
                     }
+
+                    logger.info("Failed: {}, Ongoing: {}, Completed: {}", failedAmount, ongoingAmount, completedAmount);
 
                     exchange.setProperty(TRANSACTION_LIST, transactionList);
                     exchange.setProperty(OVERRIDE_HEADER, true);

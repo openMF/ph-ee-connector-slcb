@@ -112,14 +112,12 @@ public class ReconciliationRoutes extends BaseSLCBRouteBuilder {
                             // 0 is the SLCB success code
                             completedTxn++;
                             completedAmount += payee.getAmount();
-                            ongoingAmount -= payee.getAmount();
                         } else if (payee.getStatus().getCode() == 1) {
                             ongoingTxn++;
                             ongoingAmount += payee.getAmount();
                         } else {
                             failedTxn++;
                             failedAmount += payee.getAmount();
-                            ongoingAmount -= payee.getAmount();
                         }
                     }
 
