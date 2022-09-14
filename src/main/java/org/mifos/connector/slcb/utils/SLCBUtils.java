@@ -8,7 +8,6 @@ import org.mifos.connector.slcb.dto.Transaction;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class SLCBUtils {
 
@@ -60,7 +59,7 @@ public class SLCBUtils {
     public static Payee convertTransactionToPayee(Transaction transaction) {
         Payee payee = new Payee();
         payee.setId(""+transaction.getId());
-        payee.setAccount(transaction.getAccount_number());
+        payee.setAccount(transaction.getAccountNumber());
         payee.setAmount(Double.parseDouble(transaction.getAmount()));
         payee.setExternalTransactionId(transaction.getId());
         payee.setFirstName("Unknown");
