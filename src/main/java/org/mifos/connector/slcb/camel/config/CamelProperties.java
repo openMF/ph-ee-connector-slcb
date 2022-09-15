@@ -13,6 +13,8 @@ public class CamelProperties {
 
     public static final String TRANSACTION_LIST = "transactionList";
 
+    public static final String RESULT_TRANSACTION_LIST = "resultTransactionList";
+
     public static final String OVERRIDE_HEADER = "overrideHeader";
 
     public static final String TRANSACTION_ID = "transactionId";

@@ -58,6 +58,7 @@ public class ZeebeWorkers {
                     exchange.setProperty(ONGOING_AMOUNT, variables.get(ONGOING_AMOUNT));
                     exchange.setProperty(FAILED_AMOUNT, variables.get(FAILED_AMOUNT));
                     exchange.setProperty(COMPLETED_AMOUNT, variables.get(COMPLETED_AMOUNT));
+                    exchange.setProperty(RESULT_FILE, variables.get(RESULT_FILE));
 
                     producerTemplate.send("direct:slcb-base", exchange);
 

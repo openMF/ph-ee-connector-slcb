@@ -3,11 +3,11 @@ package org.mifos.connector.slcb.camel.routes.transfer;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.model.dataformat.JsonLibrary;
-import org.mifos.connector.slcb.dto.Payee;
-import org.mifos.connector.slcb.dto.PaymentRequestDTO;
-import org.mifos.connector.slcb.dto.Status;
-import org.mifos.connector.slcb.dto.Transaction;
+import org.mifos.connector.slcb.dto.*;
+import org.mifos.connector.slcb.utils.TransactionUtils;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +51,9 @@ public class TransferRoutes extends BaseSLCBRouteBuilder {
                 }
                 )
                 .to("direct:update-status")
-                .to("direct:update-file")
+                // setting localfilpath as result file to make sure result file is uploaded
+                .setProperty(LOCAL_FILE_PATH, exchangeProperty(RESULT_FILE))
+                .to("direct:update-result-file")
                 .to("direct:upload-file")
                 .setProperty(TRANSFER_FAILED, constant(false))
                 .otherwise()
@@ -86,6 +88,7 @@ public class TransferRoutes extends BaseSLCBRouteBuilder {
                 .log("Starting route direct:update-status")
                 .process(exchange -> {
                     List<Transaction> transactionList = exchange.getProperty(TRANSACTION_LIST, List.class);
+                    List<TransactionResult> transactionResults = new ArrayList<>();
                     PaymentRequestDTO paymentRequestDTO = exchange.getProperty(SLCB_TRANSACTION_RESPONSE,
                             PaymentRequestDTO.class);
                     Status status = paymentRequestDTO.getStatus();
@@ -107,23 +110,34 @@ public class TransferRoutes extends BaseSLCBRouteBuilder {
 
                     for (Payee payee: paymentRequestDTO.getPayees()) {
                         int index = idIndexMap.get(payee.getExternalTransactionId());
-                        transactionList.get(index).setStatus(payee.getStatusMessage());
-
+                        Transaction transaction = transactionList.get(index);
+                        transaction.setPayerIdentifier(slcbConfig.sourceAccount);
+                        TransactionResult transactionResult = TransactionUtils.mapToResultDTO(transaction);
                         if (payee.getStatus().getCode() == 0) {
+                            transactionResult.setStatus("SUCCESS");
+
                             completed++;
                             completedAmount += payee.getAmount();
                         } else if (payee.getStatus().getCode() == 1) {
+                            transactionResult.setStatus("PENDING");
+
                             ongoing++;
                             ongoingAmount += payee.getAmount();
                         } else {
+                            transactionResult.setStatus("FAILED");
+                            transactionResult.setErrorCode(String.format("%s", payee.getStatus().getCode()));
+                            transactionResult.setErrorDescription(payee.getStatus().getDescription());
+
                             failed++;
                             failedAmount += payee.getAmount();
                         }
+
+                        transactionResults.add(transactionResult);
                     }
 
                     logger.info("Failed: {}, Ongoing: {}, Completed: {}", failedAmount, ongoingAmount, completedAmount);
 
-                    exchange.setProperty(TRANSACTION_LIST, transactionList);
+                    exchange.setProperty(RESULT_TRANSACTION_LIST, transactionResults);
                     exchange.setProperty(OVERRIDE_HEADER, true);
                     exchange.setProperty(ONGOING_TRANSACTION, ongoing);
                     exchange.setProperty(FAILED_TRANSACTION, failed);

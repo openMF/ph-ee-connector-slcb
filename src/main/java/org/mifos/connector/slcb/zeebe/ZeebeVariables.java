@@ -10,7 +10,10 @@ public class ZeebeVariables {
 
     public static final String FILE_NAME = "filename";
 
+    public static final String RESULT_FILE = "resultFile";
+
     public static final String REQUEST_ID = "requestId";
+
     public static final String BATCH_ID = "batchId";
     public static final String SUB_BATCH_ID = "subBatchId";
 
