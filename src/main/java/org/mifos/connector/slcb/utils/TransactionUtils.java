@@ -16,7 +16,11 @@ public class TransactionUtils {
         transactionResult.setCurrency(transactionResult.getCurrency());
         transactionResult.setNote(transactionResult.getNote());
         transactionResult.setPayeeIdentifierType("accountNumber");
-        transactionResult.setPayeeIdentifier(transaction.getAccountNumber());
+        if (transaction.getAccountNumber() != null) {
+            transactionResult.setPayeeIdentifier(transaction.getAccountNumber());
+        } else {
+            transactionResult.setPayeeIdentifier(transaction.getPayeeIdentifier());
+        }
         transactionResult.setProgramShortCode(transaction.getProgramShortCode());
         transactionResult.setCycle(transactionResult.getCycle());
         return transactionResult;

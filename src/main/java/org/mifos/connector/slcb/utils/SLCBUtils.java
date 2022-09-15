@@ -59,7 +59,13 @@ public class SLCBUtils {
     public static Payee convertTransactionToPayee(Transaction transaction) {
         Payee payee = new Payee();
         payee.setId(""+transaction.getId());
-        payee.setAccount(transaction.getAccountNumber());
+        if (transaction.getAccountNumber() != null) {
+            payee.setAccount(transaction.getAccountNumber());
+            System.out.println("Older specs!!! No worry we are compatible");
+        } else {
+            payee.setAccount(transaction.getPayeeIdentifier());
+            System.out.println("Great you are using the newer specs");
+        }
         payee.setAmount(Double.parseDouble(transaction.getAmount()));
         payee.setExternalTransactionId(transaction.getId());
         payee.setFirstName("Unknown");

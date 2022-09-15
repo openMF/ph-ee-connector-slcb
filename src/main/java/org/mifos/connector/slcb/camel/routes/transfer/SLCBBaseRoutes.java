@@ -51,18 +51,26 @@ public class SLCBBaseRoutes extends BaseSLCBRouteBuilder {
                     paymentRequestDTO.setInstitutionCode(slcbConfig.institutionCode);
                     paymentRequestDTO.setPurpose(purpose);
                     paymentRequestDTO.setRequestDate(requestDate);
-                    paymentRequestDTO.setSourceAccount(slcbConfig.sourceAccount);
+                    if (transactionList != null && !transactionList.isEmpty() &&
+                            transactionList.get(0).getPayerIdentifier() != null &&
+                            !transactionList.get(0).getPayerIdentifier().isEmpty()) {
+                        paymentRequestDTO.setSourceAccount(transactionList.get(0).getPayerIdentifier());
+                        logger.info("Great you are using the newer specs");
+                    } else {
+                        paymentRequestDTO.setSourceAccount(slcbConfig.sourceAccount);
+                        logger.info("Older specs!!! No worry we are compatible");
+                    }
                     paymentRequestDTO.setTotalAmountPaid(0.0);
 
-                    AtomicReference<Double> amountToBePaid = new AtomicReference<>(0.0);
+                    double amountToBePaid = 0.0;
                     List<Payee> payees = new ArrayList<>();
-                    transactionList.forEach(transaction -> {
-                        amountToBePaid.updateAndGet(v -> v + Double.parseDouble(transaction.getAmount()));
+                    for (Transaction transaction: transactionList) {
+                        amountToBePaid += Double.parseDouble(transaction.getAmount());
                         Payee payee = SLCBUtils.convertTransactionToPayee(transaction);
                         payees.add(payee);
-                    });
+                    }
 
-                    paymentRequestDTO.setTotalAmountToBePaid(amountToBePaid.get());
+                    paymentRequestDTO.setTotalAmountToBePaid(amountToBePaid);
                     paymentRequestDTO.setPayees(payees);
 
                     logger.info("Payment Request DTO: {}", paymentRequestDTO.toString());
