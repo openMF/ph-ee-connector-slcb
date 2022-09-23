@@ -51,14 +51,15 @@ public class TransferRoutes extends BaseSLCBRouteBuilder {
                 }
                 )
                 .to("direct:update-status")
-                // setting localfilpath as result file to make sure result file is uploaded
-                .setProperty(LOCAL_FILE_PATH, exchangeProperty(RESULT_FILE))
-                .to("direct:update-result-file")
-                .to("direct:upload-file")
                 .setProperty(TRANSFER_FAILED, constant(false))
                 .otherwise()
                 .log(LoggingLevel.ERROR, "Transaction request unsuccessful")
                 .process(exchange -> {
+                    List<Transaction> transactionList = exchange.getProperty(TRANSACTION_LIST, List.class);
+                    List<TransactionResult> transactionResultList = updateTransactionStatusToFailed(transactionList);
+                    exchange.setProperty(RESULT_TRANSACTION_LIST, transactionResultList);
+                    exchange.setProperty(OVERRIDE_HEADER, true);
+
                     exchange.setProperty(TRANSACTION_ID, exchange.getProperty(CORRELATION_ID)); // TODO: Improve this
                     exchange.setProperty(ERROR_CODE, exchange.getIn().getHeader(Exchange.HTTP_RESPONSE_CODE));
                     exchange.setProperty(ERROR_DESCRIPTION, exchange.getIn().getBody(String.class));
@@ -71,6 +72,11 @@ public class TransferRoutes extends BaseSLCBRouteBuilder {
                     exchange.setProperty(FAILED_AMOUNT, exchange.getProperty(FAILED_AMOUNT));
                     exchange.setProperty(COMPLETED_AMOUNT, 0);
                 })
+                .end()
+                // setting localfilpath as result file to make sure result file is uploaded
+                .setProperty(LOCAL_FILE_PATH, exchangeProperty(RESULT_FILE))
+                .to("direct:update-result-file")
+                .to("direct:upload-file")
                 .to("direct:delete-local-file")
                 .setProperty(TRANSFER_FAILED, constant(true));
 
@@ -147,5 +153,19 @@ public class TransferRoutes extends BaseSLCBRouteBuilder {
                     exchange.setProperty(COMPLETED_AMOUNT, completedAmount);
                 });
 
+    }
+
+    // update Transactions status to failed
+    private List<TransactionResult> updateTransactionStatusToFailed(List<Transaction> transactionList) {
+        List<TransactionResult> transactionResultList = new ArrayList<>();
+        for (Transaction transaction : transactionList) {
+            TransactionResult transactionResult = TransactionUtils.mapToResultDTO(transaction);
+            transactionResult.setErrorCode("500");
+            transactionResult.setErrorDescription("External server error");
+            transactionResult.setStatus("Failed at third party server");
+            transactionResultList.add(transactionResult);
+        }
+
+        return transactionResultList;
     }
 }
