@@ -142,8 +142,8 @@ public class ZeebeWorkers {
     }
 
     protected enum Worker {
-        SLCB_TRANSFER("initiateTransfer"),
-        RECONCILIATION("reconciliation");
+        SLCB_TRANSFER("slcb-initiateTransfer"),
+        RECONCILIATION("slcb-reconciliation");
 
         private final String text;
 
