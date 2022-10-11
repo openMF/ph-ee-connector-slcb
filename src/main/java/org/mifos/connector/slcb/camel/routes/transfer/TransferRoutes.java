@@ -87,7 +87,8 @@ public class TransferRoutes extends BaseSLCBRouteBuilder {
                 .setBody(exchange -> exchange.getProperty(SLCB_CHANNEL_REQUEST))
                 .marshal().json(JsonLibrary.Jackson)
                 .log(LoggingLevel.INFO, "Transaction Request Body: ${body}")
-                .toD(slcbConfig.transactionRequestUrl + "?bridgeEndpoint=true&throwExceptionOnFailure=false");
+                .toD(slcbConfig.transactionRequestUrl + "?bridgeEndpoint=true&throwExceptionOnFailure=false")
+                .log("Transaction API response: ${body}");
 
         from("direct:update-status")
                 .id("direct:update-status")

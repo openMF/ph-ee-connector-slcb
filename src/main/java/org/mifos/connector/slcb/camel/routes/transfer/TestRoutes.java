@@ -1,20 +1,27 @@
 package org.mifos.connector.slcb.camel.routes.transfer;
 
-import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.model.dataformat.JsonLibrary;
 import org.mifos.connector.slcb.dto.PaymentRequestDTO;
 import org.mifos.connector.slcb.file.FileTransferService;
 import org.mifos.connector.slcb.utils.CsvUtils;
+import org.mifos.connector.slcb.utils.SecurityUtils;
 import org.mifos.connector.slcb.zeebe.ZeebeProcessStarter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.File;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 
 import static org.mifos.connector.slcb.camel.config.CamelProperties.SLCB_CHANNEL_REQUEST;
 
 @Component
-public class TestRoutes extends RouteBuilder {
+public class TestRoutes extends BaseSLCBRouteBuilder {
 
     private final ZeebeProcessStarter zeebeProcessStarter;
 
@@ -67,8 +74,18 @@ public class TestRoutes extends RouteBuilder {
                 });
 
         from("rest:post:test/transferRequest")
-                .process(exchange -> exchange.setProperty(SLCB_CHANNEL_REQUEST, exchange.getIn().getBody(String.class)))
-                .to("direct:transfer-route")
+                .unmarshal().json(JsonLibrary.Jackson, PaymentRequestDTO.class)
+                .process(exchange -> {
+                    PaymentRequestDTO paymentRequestDTO = exchange.getIn().getBody(PaymentRequestDTO.class);
+                    String authCode = SecurityUtils.signContent(UUID.randomUUID().toString(), slcbConfig.signatureKey);
+                    authCode = Base64.getEncoder().encodeToString(authCode.getBytes());
+                    logger.info("Signature: {}", slcbConfig.signatureKey);
+                    logger.info("Auth Code: {}", authCode);
+                    paymentRequestDTO.setAuthorizationCode(authCode);
+                    exchange.setProperty(SLCB_CHANNEL_REQUEST, paymentRequestDTO);
+                })
+                .to("direct:get-access-token")
+                .to("direct:commit-transaction")
                 .setBody(exchange -> exchange.getIn().getBody(String.class));
     }
 }
