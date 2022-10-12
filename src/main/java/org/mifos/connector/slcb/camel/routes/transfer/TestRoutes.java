@@ -78,7 +78,7 @@ public class TestRoutes extends BaseSLCBRouteBuilder {
                 .process(exchange -> {
                     PaymentRequestDTO paymentRequestDTO = exchange.getIn().getBody(PaymentRequestDTO.class);
                     String authCode = SecurityUtils.signContent(UUID.randomUUID().toString(), slcbConfig.signatureKey);
-                    authCode = Base64.getEncoder().encodeToString(authCode.getBytes());
+                    //authCode = Base64.getEncoder().encodeToString(authCode.getBytes());
                     logger.info("Signature: {}", slcbConfig.signatureKey);
                     logger.info("Auth Code: {}", authCode);
                     paymentRequestDTO.setAuthorizationCode(authCode);
