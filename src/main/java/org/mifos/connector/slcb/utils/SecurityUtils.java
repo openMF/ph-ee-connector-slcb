@@ -4,9 +4,12 @@ import org.apache.commons.codec.binary.Base64;
 import javax.crypto.*;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.*;
 import java.security.*;
+import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
+import java.security.spec.X509EncodedKeySpec;
 
 public class SecurityUtils {
 
@@ -41,6 +44,14 @@ public class SecurityUtils {
         return new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "RSA");
     }
 
+    // get publicKey from String
+    public static PublicKey getPublicKeyFromString(String key) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        byte[] keyBytes = Base64.decodeBase64(key);
+        EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePublic(publicKeySpec);
+    }
+
     /**
      * Applies given cipher on a plain text
      *
@@ -71,9 +82,9 @@ public class SecurityUtils {
     public static String encrypt(String input, String encKey) throws
             NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException,
             IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException {
-        SecretKey key = getSecretKey(encKey);
+        PublicKey publicKey = getPublicKeyFromString(encKey);
         Cipher cipher = getCipher();
-        cipher.init(Cipher.ENCRYPT_MODE, key);
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
         return encryptFromCipher(input, cipher);
     }
 
