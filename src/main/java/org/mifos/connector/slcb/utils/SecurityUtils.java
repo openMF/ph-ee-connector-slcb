@@ -36,9 +36,9 @@ public class SecurityUtils {
      * @return [SecretKey] An instance of the [SecretKey]
      */
     public static SecretKey getSecretKey(String key) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-        KeySpec spec = new PBEKeySpec(key.toCharArray(), key.getBytes(), 65536, 256);
-        return new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("RSA");
+        KeySpec spec = new PBEKeySpec(key.toCharArray(), key.getBytes(), 65536, 2048);
+        return new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "RSA");
     }
 
     /**
@@ -50,14 +50,15 @@ public class SecurityUtils {
      */
     public static String encryptFromCipher(String input, Cipher cipher) throws IllegalBlockSizeException, BadPaddingException {
         byte[] cipherText = cipher.doFinal(input.getBytes());
-        return Base64.encodeBase64String(cipherText);
+        return java.util.Base64.getEncoder().encodeToString(cipherText);
+       // return Base64.getEncoder().encodeToString(cipherText);
     }
 
     /**
      * @return [Cipher] returns the default instance of [Cipher]
      */
     public static Cipher getCipher() throws NoSuchPaddingException, NoSuchAlgorithmException {
-        return Cipher.getInstance("AES/ECB/PKCS5PADDING");
+        return Cipher.getInstance("RSA");
     }
 
     /**
