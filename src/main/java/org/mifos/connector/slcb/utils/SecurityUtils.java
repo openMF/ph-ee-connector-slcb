@@ -4,13 +4,9 @@ import org.apache.commons.codec.binary.Base64;
 import javax.crypto.*;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
-import java.security.spec.EncodedKeySpec;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
-import java.security.spec.X509EncodedKeySpec;
+import java.security.spec.*;
 
 public class SecurityUtils {
 
@@ -61,6 +57,21 @@ public class SecurityUtils {
     }
 
     /**
+     * Generates [PrivateKey] object from String public key
+     *
+     * @param key string value of public key
+     * @return
+     * @throws NoSuchAlgorithmException
+     * @throws InvalidKeySpecException
+     */
+    public static PrivateKey getPrivateKeyFromString(String key) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        byte[] keyBytes = Base64.decodeBase64(key);
+        EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
+        KeyFactory keyFactory = getKeyFactory();
+        return keyFactory.generatePrivate(keySpec);
+    }
+
+    /**
      * Applies given cipher on a plain text
      *
      * @param input  text to be encoded
@@ -70,6 +81,23 @@ public class SecurityUtils {
     public static String encryptFromCipher(String input, Cipher cipher) throws IllegalBlockSizeException, BadPaddingException {
         byte[] cipherText = cipher.doFinal(input.getBytes(StandardCharsets.UTF_8));
         return Base64.encodeBase64String(cipherText);
+    }
+
+    /**
+     * Applies given cipher on a plain text
+     *
+     * @param input  text to be encoded
+     * @param cipher teh instance of the [Cipher]
+     * @return [String] encrypted data as a Base64 encoded text
+     */
+    public static String decryptFromCipher(String input, Cipher cipher) throws IllegalBlockSizeException, BadPaddingException {
+        byte[] cipherText = cipher.doFinal(Base64.decodeBase64(input));
+        return new String(cipherText, StandardCharsets.UTF_8);
+    }
+
+    // get key factory
+    public static KeyFactory getKeyFactory() throws NoSuchAlgorithmException {
+        return KeyFactory.getInstance("RSA");
     }
 
     /**
@@ -93,6 +121,15 @@ public class SecurityUtils {
         Cipher cipher = getCipher();
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
         return encryptFromCipher(input, cipher);
+    }
+
+    public static String decrypt(String input, String decKey) throws
+            NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException,
+            IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException {
+        PrivateKey privateKey = getPrivateKeyFromString(decKey);
+        Cipher cipher = getCipher();
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        return decryptFromCipher(input, cipher);
     }
 
 }

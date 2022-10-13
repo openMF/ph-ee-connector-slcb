@@ -4,6 +4,7 @@ import org.mifos.connector.common.gsma.dto.GSMATransaction;
 import org.mifos.connector.common.gsma.dto.GsmaParty;
 import org.mifos.connector.slcb.dto.Payee;
 import org.mifos.connector.slcb.dto.PaymentRequestDTO;
+import org.mifos.connector.slcb.dto.Status;
 import org.mifos.connector.slcb.dto.Transaction;
 
 import java.util.ArrayList;
@@ -75,6 +76,20 @@ public class SLCBUtils {
         payee.setStatusMessage(null);
         payee.setTransactionId(null);
         return payee;
+    }
+
+    public static int getStatusCodeOrDefault(Status status) {
+        if (status != null) {
+            return status.getCode();
+        }
+        return -1;
+    }
+
+    public static String getStatusDescriptionOrDefault(Status status) {
+        if (status != null) {
+            return status.getDescription();
+        }
+        return "No description from third party";
     }
 
 }
