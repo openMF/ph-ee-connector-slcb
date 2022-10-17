@@ -12,21 +12,22 @@ public class SecurityUtils {
 
     /**
      * Encrypts the [content] using the [privateKey]
-     * @param content data to be encrypted
-     * @param privateKey encryption key
+     *
+     * @param content    data to be encrypted
+     * @param key encryption key
      * @return encrypted data
-     * @throws NoSuchPaddingException see @getSecretKey
+     * @throws NoSuchPaddingException    see @getSecretKey
      * @throws IllegalBlockSizeException see @encryptFromCipher
-     * @throws NoSuchAlgorithmException see @getCipher
-     * @throws BadPaddingException see @encryptFromCipher
-     * @throws InvalidKeySpecException see @getSecretKey
-     * @throws InvalidKeyException see @encrypt
+     * @throws NoSuchAlgorithmException  see @getCipher
+     * @throws BadPaddingException       see @encryptFromCipher
+     * @throws InvalidKeySpecException   see @getSecretKey
+     * @throws InvalidKeyException       see @encrypt
      */
-    public static String signContent(String content, String privateKey) throws
+    public static String signContent(String content, String key) throws
             NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException,
             BadPaddingException, InvalidKeySpecException, InvalidKeyException {
 
-        return encrypt(content, privateKey);
+        return encrypt(content, key);
     }
 
     /**
