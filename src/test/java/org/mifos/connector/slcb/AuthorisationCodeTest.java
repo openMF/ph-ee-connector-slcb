@@ -1,15 +1,8 @@
 package org.mifos.connector.slcb;
 
-import com.google.common.collect.Range;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.mifos.connector.slcb.utils.SecurityUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.ResponseEntity;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -17,22 +10,11 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.UUID;
-
 import static com.google.common.truth.Truth.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AuthorisationCodeTest {
-
-    @LocalServerPort
-    private int port;
-
-    @Autowired
-    private TestRestTemplate restTemplate;
-
-    private String baseUrl = "http://localhost:";
-
-    private String decryptionUrl = baseUrl + port + "/decrypt";
 
     private final String encryptionKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtPuP1m/jpt5O71c+5oNj" +
             "faZCCFuiz63936hoL2SfGvJtbRZjKZf5XHF8terfBzXb0W8HQ6o/204HOg/mm/fV" +
@@ -42,25 +24,32 @@ public class AuthorisationCodeTest {
             "SR/U5jZhYDABzacPwEfqKILiLuzjCip3DpahfN0vZ/5Nel8+3y5zRVDDlamTqjjb" +
             "iwIDAQAB";
 
-    @BeforeAll
-    public void setDecryptionUrl() {
-        this.decryptionUrl = baseUrl + port + "/decrypt";
-    }
-
-    @Test
-    public void decryptionApiTest() {
-        String validEncryptedData = "DW9kHyaF1K1TLnMY/3xV4zEuGvC3J0mAN4oRwrt/Yzh21ORsrw9QoGhFh" +
-                "M4xoBDina1fXvRKqw50nFzhV1Fwz3nGEVTPfj48PsPJf/pxK+4OHa5wq40/xf91Q+DJ+7v2OUANqZe" +
-                "EhfDhuJMTXo0r281S0a/rBmguqfzrZC986SV961UUZpehgAifAWKJShWu0t6Ur9Lui6u0YRhZn+/ho" +
-                "YO4zHyfpa7Z5yMlhUZl/kLo0zDOc2jydH6kGUPqXOSnzvDRr8jXgLxsxex7vBrEVAGdrYKgMvY6Ecc" +
-                "xvjekgAVrjbvBq48OaLouUVDUWZa1M6s1Q0i9KT0tO9ushkooEw==";
-
-        ResponseEntity<String> response = restTemplate.postForEntity(decryptionUrl, validEncryptedData, String.class);
-
-        assertThat(response.getStatusCodeValue()).isIn(Range.closed(200, 299));
-        System.out.println("Decryption endpoint >> " +decryptionUrl + ", returned response code: " +
-                response.getStatusCodeValue());
-    }
+    private final String decryptionKey = "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC0+4/Wb+Om3k7v" +
+            "Vz7mg2N9pkIIW6LPrf3fqGgvZJ8a8m1tFmMpl/lccXy16t8HNdvRbwdDqj/bTgc6" +
+            "D+ab99UaN0zb2SIgHbq7XaFY2UnJuo29xRYPDDSLng6Rc+29WgMbYPJPPqwLLlje" +
+            "xPHJUHn6Faz6Ut5LInxwfMEfrsct+Cy5n57dA0mQq2mz/ceSfsYTqAbhUCl6l0s0" +
+            "Au8ljy/aXvReRzhHZFE+F8GXmlYX6kUBRxcdFqvJuv6KuMUukzzqmH8rWD8S5n8s" +
+            "+JgZyLNJH9TmNmFgMAHNpw/AR+ooguIu7OMKKncOlqF83S9n/k16Xz7fLnNFUMOV" +
+            "qZOqONuLAgMBAAECggEANNEtmxEwSOSb+LFng/JYOLUqlDHaA+3tJzaIoTwmSsDx" +
+            "OmLMMblOZrIgCR8wU3ReYHKclhy7Yg8VgNZfIKllIa992LM3iFPkyQV8LufK5vpw" +
+            "ny9DTsTrGMvZyI0ilp4MRhM24/WQU/sEqI6lWXEJB/kHcE563UaFNnbSDaL+MeW7" +
+            "FgGT8lu8/IvTdTYPF5fj6ifcEn0hEZ/aLEg0m9DRWwIdcdqsJRIc0ugSeYTedtrd" +
+            "p6TBoPNgrIL2Jde+cJndWVFAbvpHza7bq6ej9wZbUZx8ICB+VhicVHAfBxvQL9Yr" +
+            "5B/ud8cUmmAg1t5Oe5JG8UIUD8oS2jD9bwj+NJKKUQKBgQDwBO205S4PhDkL55nZ" +
+            "zLAC0CmmWMJhyAUpzar0YBo28K+L9Z3q7IfMmkIgaCQG1o0XIZYWpS0p13F1/ldL" +
+            "JTIfjZGRDSjran48ILu54P1EPaLRGymwdBqsvCJITSTxaurXW0ekRsXkcjGaxzqG" +
+            "3niZunCvDODVQBME4rgiVvJFZQKBgQDBCF5dqw+skPJTgUD9dude7f5qCDP//APT" +
+            "H3qUwExLEmHnMPOkXD//C3mu+jLuHHvuULwl19CkuNE4jJ+GgbuEYnrmgx/X5r7R" +
+            "RORYY/hZVcAhXZsuRwjaEuC9m9efvE3d4E9cDaiQIOweChsND0EVi9L4oJAhuXwR" +
+            "8+9B+arGLwKBgFE+2dfp2/WUpFrLQuDe0JWjMPYGBYZj1puX6s5d2YHPZxzRP2tO" +
+            "NYmkjc26crd92LSDwfJYZzlKnDV8qr/dD2Ju4V9gPQGzQpfH3MPGzPRUiNCPiUUZ" +
+            "iA4AgPpIYsD1mBjd5RpOep4hqXjjB4SvudMPsSUQDusgjU+SDxJQrCGhAoGBAKfz" +
+            "3hdlxSeCnjWl2qQulrV0Ic6kAIqT/cfuNbvDbR5Mij6bywGQ+mWw2Fk0fKfMxM/g" +
+            "EzRiCLmpzPCE+jAQJNXU0dZK9KPnstNmO7/ki6s+/wKI7YJgcAU+M6kGNaBYOO/6" +
+            "QVJ419c/rfGdHVhJk3lpxVBqc73EI32DXwNqdfolAoGAaCG2oOBtJViAPmcU9ZqC" +
+            "MWAU2A2XL3OpYqLiqXunqrGi19oo0Yq19KzeGWQ+IYgE+GCNvYaFE0t9spil9WCP" +
+            "PWCcv7w53R8KM0f3v7eqRTWCNDSXI1pfPJXduonIvqybAiG8nF8yPe7iyGlixY/v" +
+            "znfJqXGq8xCTgFs8ACOWKeE=";
 
     @Test
     public void authorisationCodeEncryptionAndDecryptionTest() {
@@ -74,9 +63,17 @@ public class AuthorisationCodeTest {
             e.printStackTrace();
             return;
         }
-        String decryptedData = restTemplate.postForObject(decryptionUrl, authorisationCode, String.class);
-        assertThat(decryptedData).isEqualTo(data);
-        System.out.println("Initial data is same as decrypted data");
+        String decryptedData = null;
+        try {
+            decryptedData = SecurityUtils.decrypt(authorisationCode, decryptionKey);
+            assertThat(decryptedData).isEqualTo(data);
+            System.out.println("Initial data is same as decrypted data");
+        } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | IllegalBlockSizeException |
+                 BadPaddingException | InvalidKeySpecException e) {
+            assertThat(false).isTrue();
+            e.printStackTrace();
+            return;
+        }
     }
 
 }
