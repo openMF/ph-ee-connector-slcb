@@ -3,7 +3,6 @@ package org.mifos.connector.slcb.cucumber;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import io.cucumber.spring.CucumberContextConfiguration;
 import org.mifos.connector.slcb.utils.SecurityUtils;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -14,8 +13,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.UUID;
 import static com.google.common.truth.Truth.assertThat;
 
-@CucumberContextConfiguration
-public class AuthCodeStepDefinition {
+public class AuthCodeStepDef {
 
     private String randomData;
     private String encryptedData;
