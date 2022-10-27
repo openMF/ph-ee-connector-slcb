@@ -5,12 +5,9 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.apache.camel.Exchange;
-import org.apache.camel.ProducerTemplate;
 import org.mifos.connector.slcb.dto.PaymentRequestDTO;
 import org.mifos.connector.slcb.dto.Transaction;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.ArrayList;
 import java.util.List;
 import static com.google.common.truth.Truth.assertThat;
@@ -19,7 +16,7 @@ import static org.mifos.connector.slcb.camel.config.CamelProperties.TRANSACTION_
 import static org.mifos.connector.slcb.zeebe.ZeebeVariables.*;
 
 
-public class SLCBIntegrationStepDef {
+public class SLCBIntegrationStepDef extends BaseStepDef {
 
     private String batchId;
     private String requestId;
@@ -29,9 +26,6 @@ public class SLCBIntegrationStepDef {
     private Exchange exchange;
 
     private PaymentRequestDTO paymentRequestDTO;
-
-    @Autowired
-    ProducerTemplate template;
 
     @Given("I have a batchId: {string}, requestId: {string}, purpose: {string}")
     public void i_have_required_data(String batchId, String requestId, String purpose){
@@ -56,9 +50,9 @@ public class SLCBIntegrationStepDef {
         assertThat(transactionList).isNotEmpty();
     }
 
-    @And("I can start camel context")
+    @And("camel context is not null")
     public void i_can_start_camel_context() throws Exception {
-        //super.setupCamel();
+        assertThat(template).isNotNull();
     }
 
     @When("I call the buildPayload route")
