@@ -18,20 +18,11 @@ import static org.mifos.connector.slcb.zeebe.ZeebeVariables.*;
 
 public class SLCBIntegrationStepDef extends BaseStepDef {
 
-    private String batchId;
-    private String requestId;
-    private String purpose;
-    private List<Transaction> transactionList;
-
-    private Exchange exchange;
-
-    private PaymentRequestDTO paymentRequestDTO;
-
     @Given("I have a batchId: {string}, requestId: {string}, purpose: {string}")
     public void i_have_required_data(String batchId, String requestId, String purpose){
-        this.batchId = batchId;
-        this.requestId = requestId;
-        this.purpose = purpose;
+        BaseStepDef.batchId = batchId;
+        BaseStepDef.requestId = requestId;
+        BaseStepDef.purpose = purpose;
     }
 
 
@@ -42,8 +33,8 @@ public class SLCBIntegrationStepDef extends BaseStepDef {
         transactionList.add(Mockito.mock(Transaction.class));
 
         transactionList.forEach(transaction -> {
-            Mockito.when(transaction.getBatchId()).thenReturn(this.batchId);
-            Mockito.when(transaction.getRequestId()).thenReturn(this.requestId);
+            Mockito.when(transaction.getBatchId()).thenReturn(batchId);
+            Mockito.when(transaction.getRequestId()).thenReturn(requestId);
             Mockito.when(transaction.getAmount()).thenReturn(amount);
         });
 
@@ -57,13 +48,13 @@ public class SLCBIntegrationStepDef extends BaseStepDef {
 
     @When("I call the buildPayload route")
     public void i_call_the_build_payload_route() {
-        this.exchange = template.send("direct:build-payload", exchange -> {
-            exchange.setProperty(BATCH_ID, this.batchId);
-            exchange.setProperty(REQUEST_ID, this.requestId);
-            exchange.setProperty(PURPOSE, this.purpose);
-            exchange.setProperty(TRANSACTION_LIST, this.transactionList);
+        exchange = template.send("direct:build-payload", exchange -> {
+            exchange.setProperty(BATCH_ID, batchId);
+            exchange.setProperty(REQUEST_ID, requestId);
+            exchange.setProperty(PURPOSE, purpose);
+            exchange.setProperty(TRANSACTION_LIST, transactionList);
         });
-        assertThat(this.exchange).isNotNull();
+        assertThat(exchange).isNotNull();
     }
 
     @Then("the exchange should have a variable with SLCB payload")

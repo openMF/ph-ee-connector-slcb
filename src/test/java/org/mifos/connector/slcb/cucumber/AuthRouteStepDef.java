@@ -16,14 +16,11 @@ import static org.apache.camel.language.constant.ConstantLanguage.constant;
 import static org.mifos.connector.slcb.camel.config.CamelProperties.SLCB_ACCESS_TOKEN;
 
 
-public class AuthRouteTest extends BaseStepDef {
+public class AuthRouteStepDef extends BaseStepDef {
 
     @EndpointInject("mock:auth-response")
     protected MockEndpoint mockAuthBean;
 
-    private final AccessTokenDTO accessTokenDTO = new AccessTokenDTO();
-
-    private Exchange exchange;
 
     @Test
     void contextLoads() {
