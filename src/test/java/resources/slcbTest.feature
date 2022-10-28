@@ -1,4 +1,5 @@
 Feature: SLCB integration test
+
   Scenario: Test the auth flow
     Given I can mock external API response with token: "123-123-123" and expiry: 2000
     When I call get-token route
