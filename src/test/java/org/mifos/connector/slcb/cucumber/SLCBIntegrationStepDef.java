@@ -19,7 +19,7 @@ import static org.mifos.connector.slcb.zeebe.ZeebeVariables.*;
 public class SLCBIntegrationStepDef extends BaseStepDef {
 
     @Given("I have a batchId: {string}, requestId: {string}, purpose: {string}")
-    public void i_have_required_data(String batchId, String requestId, String purpose){
+    public void saveTheRequiredData(String batchId, String requestId, String purpose){
         BaseStepDef.batchId = batchId;
         BaseStepDef.requestId = requestId;
         BaseStepDef.purpose = purpose;
@@ -27,7 +27,7 @@ public class SLCBIntegrationStepDef extends BaseStepDef {
 
 
     @And("I mock transactionList with two transactions each of {string} value")
-    public void i_can_mock_transaction_list(String amount) {
+    public void mockTransactionList(String amount) {
         transactionList = new ArrayList<>();
         transactionList.add(Mockito.mock(Transaction.class));
         transactionList.add(Mockito.mock(Transaction.class));
@@ -42,12 +42,12 @@ public class SLCBIntegrationStepDef extends BaseStepDef {
     }
 
     @And("camel context is not null")
-    public void i_can_start_camel_context() throws Exception {
+    public void camelContextCheck() {
         assertThat(template).isNotNull();
     }
 
     @When("I call the buildPayload route")
-    public void i_call_the_build_payload_route() {
+    public void callBuildPayloadRoute() {
         exchange = template.send("direct:build-payload", exchange -> {
             exchange.setProperty(BATCH_ID, batchId);
             exchange.setProperty(REQUEST_ID, requestId);
@@ -58,23 +58,23 @@ public class SLCBIntegrationStepDef extends BaseStepDef {
     }
 
     @Then("the exchange should have a variable with SLCB payload")
-    public void i_can_parse_payment_request_dto_from_exchange_property() {
+    public void slcbPayloadExchangeVariableCheck() {
         assertThat(exchange.getProperty(SLCB_CHANNEL_REQUEST)).isNotNull();
     }
 
     @And("I can parse SLCB payload to DTO")
-    public void i_can_parse_slcb_payload_to_dto() {
+    public void parseSlcbPayload() {
         paymentRequestDTO = exchange.getProperty(SLCB_CHANNEL_REQUEST, PaymentRequestDTO.class);
         assertThat(paymentRequestDTO).isNotNull();
     }
 
     @And("total transaction amount is {int}")
-    public void total_transaction_amount_is(int totalAmount) {
+    public void totalTransactionAmountCheck(int totalAmount) {
         assertThat(paymentRequestDTO.getTotalAmountToBePaid()).isEqualTo(totalAmount);
     }
 
     @And("total transaction count is {int}, failed is {int} and completed is {int}")
-    public void total_transaction_count_is(int totalTransactionCount,
+    public void totalTransactionCountCheck(int totalTransactionCount,
                                            int failedTransactionCount,
                                            int completedTransactionCount) {
         assertThat(exchange.getProperty(TOTAL_TRANSACTION, Integer.class)).isEqualTo(totalTransactionCount);
