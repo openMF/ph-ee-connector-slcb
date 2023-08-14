@@ -1,83 +1,46 @@
-version: 2.1
-executors:
-  docker-executor:
-    docker:
-      - image: circleci/openjdk:17-buster-node-browsers-legacy
+# Java Gradle CircleCI 2.0 configuration file
+# See: https://circleci.com/docs/language-java/
+version: 2
 
+# Define a job to be invoked later in a workflow.
+# See: https://circleci.com/docs/configuration-reference/#jobs
 jobs:
-  build_and_push_tag_image:
-    executor: docker-executor
+  build:
+    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
+    # See: https://circleci.com/docs/configuration-reference/#docker-machine-macos-windows-executor
+    docker:
+      # specify the version you desire here
+      - image: circleci/openjdk:8-jdk
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/circleci-images/
+      # - image: circleci/postgres:9.4
+
+    working_directory: ~/repo
+
     environment:
-      JVM_OPTS: -Xmx512m
-      TERM: dumb  
-      GITHUB_TOKEN: ${GITHUB_TOKEN}  # Add the GitHub token as an environment variable
-
-    steps:
-      - checkout
-      - setup_remote_docker:
-          version: 20.10.14
-      - run:
-          name: Build and Push Docker tag Image
-          command: |
-            # Set environment variables
-            IMAGE_TAG=$CIRCLE_TAG
-
-            # Check if the Docker image with the same tag already exists in Docker Hub
-            if curl -s -f -u "$DOCKERHUB_USERNAME":"$DOCKERHUB_PASSWORD" "https://hub.docker.com/v2/repositories/openmf/ph-ee-connector-slcb/tags/$IMAGE_TAG" > /dev/null; then
-              echo "Skipping the build and push as the tag $IMAGE_TAG already exists in Docker Hub."
-              exit 0
-            fi
-
-            # Build and tag the Docker image
-            ./gradlew bootJar
-            docker build -t "openmf/ph-ee-connector-slcb:$IMAGE_TAG" .
-
-            # Push the Docker image to Docker Hub
-            docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
-            docker push "openmf/ph-ee-connector-slcb:$IMAGE_TAG"
-
-          # when: always  # The job will be executed even if there's no match for the tag filter
-  
-  build_and_push_latest_image:
-    executor: docker-executor
-    environment:
-      JVM_OPTS: -Xmx512m
+      # Customize the JVM maximum heap limit
+      JVM_OPTS: -Xmx3200m
       TERM: dumb
-
+    # Add steps to the job
+    # See: https://circleci.com/docs/configuration-reference/#steps
     steps:
       - checkout
-      # Install Docker to build and push the image
-      - setup_remote_docker:
-          version: 20.10.14
 
-      # Build the Docker image
-      - run:
-          name: Build Docker image
-          command: |
-            ./gradlew bootJar
-            docker build -t openmf/ph-ee-connector-slcb:latest .
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "build.gradle" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
 
-      # Log in to DockerHub using environment variables
-      - run:
-          name: Login to DockerHub
-          command: echo "${DOCKERHUB_PASSWORD}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
+      - run: gradle dependencies
 
-      # Push the Docker image to DockerHub
-      - run:
-          name: Push Docker image to DockerHub
-          command: docker push openmf/ph-ee-connector-slcb:latest        
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-{{ checksum "build.gradle" }}
 
-workflows:
-  version: 2
-  build-and-push:
-    jobs:
-      - build_and_push_tag_image:
-          filters:
-            tags:
-              only: /^v\d+\.\d+\.\d+$/  # Match tags in the format v1.2.3
-          context:
-              - DOCKER
-      - build_and_push_latest_image:
-          context:
-              - DOCKER
-             
+      # run tests!
+      - run: gradle test
